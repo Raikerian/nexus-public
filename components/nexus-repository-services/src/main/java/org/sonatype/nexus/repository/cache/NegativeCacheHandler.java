@@ -54,7 +54,7 @@ public class NegativeCacheHandler
     Status status = negativeCache.get(key);
     if (status == null) {
       response = context.proceed();
-      if (isNotFound(response)) {
+      if (isNotFound(response) && isEnabled(context)) {
         negativeCache.put(key, response.getStatus());
       }
       else if (response.getStatus().isSuccessful()) {
@@ -67,6 +67,12 @@ public class NegativeCacheHandler
       log.debug("Found {} in negative cache, returning {}", key, response);
     }
     return response;
+  }
+
+  private Boolean isEnabled(@Nonnull Context context) {
+    Boolean disableNegativeCache = context.getRequest().getAttributes().get("DisableNegativeCache", Boolean.class);
+    disableNegativeCache = disableNegativeCache == null ? false : disableNegativeCache;
+    return !disableNegativeCache;
   }
   
   protected Response buildResponse(final Status status, final Context context) {
